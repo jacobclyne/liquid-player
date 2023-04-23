@@ -1,4 +1,4 @@
-package com.yuanzhou.vlc.vlcplayer;
+package com.liquid.player.vlcplayer;
 
 import android.content.Context;
 import android.text.TextUtils;
@@ -35,6 +35,7 @@ public class ReactVlcPlayerViewManager extends SimpleViewManager<ReactVlcPlayerV
     private static final String PROP_AUTO_ASPECT_RATIO = "autoAspectRatio";
     private static final String PROP_CLEAR = "clear";
     private static final String PROP_PROGRESS_UPDATE_INTERVAL = "progressUpdateInterval";
+    private static final String PROP_SUBTITLE_TRACK = "subtitleTrack";
     private static final String PROP_TEXT_TRACK = "textTrack";
     private static final String PROP_AUDIO_TRACK = "audioTrack";
 
@@ -75,12 +76,11 @@ public class ReactVlcPlayerViewManager extends SimpleViewManager<ReactVlcPlayerV
         String uriString = src.hasKey(PROP_SRC_URI) ? src.getString(PROP_SRC_URI) : null;
         String extension = src.hasKey(PROP_SRC_TYPE) ? src.getString(PROP_SRC_TYPE) : null;
         boolean isNetStr = src.getBoolean(PROP_SRC_IS_NETWORK) ? src.getBoolean(PROP_SRC_IS_NETWORK) : false;
-        boolean autoplay = src.getBoolean("autoplay") ? src.getBoolean("autoplay") : true;
+        boolean autoplay = src.getBoolean("autoPlay") ? src.getBoolean("autoPlay") : true;
         if (TextUtils.isEmpty(uriString)) {
             return;
         }
         videoView.setSrc(src);
-
     }
 
     @ReactProp(name = PROP_SUBTITLE_URI)
@@ -124,6 +124,11 @@ public class ReactVlcPlayerViewManager extends SimpleViewManager<ReactVlcPlayerV
     @ReactProp(name = PROP_AUTO_ASPECT_RATIO, defaultBoolean = false)
     public void setAutoAspectRatio(final ReactVlcPlayerView videoView, final boolean autoPlay) {
         videoView.setAutoAspectRatio(autoPlay);
+    }
+
+    @ReactProp(name = PROP_SUBTITLE_TRACK)
+    public void setSubtitleTrack(final ReactVlcPlayerView videoView, final int track) {
+        videoView.setSubtitleTrack(track);
     }
 
     @ReactProp(name = PROP_RESUME, defaultBoolean = true)
