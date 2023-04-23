@@ -1,0 +1,34 @@
+{
+  "name": "liquid-player",
+  "version": "1.0.0",
+  "description": "React native media player for video streaming and playing. Supports RTSP, RTMP and other protocols supported by VLC player",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "vlc",
+    "player",
+    "android",
+    "ios",
+    "react-native",
+    "mp4",
+    "rtsp",
+    "media",
+    "video"
+  ],
+  "dependencies": {
+    "react-native-slider": "^0.11.0",
+    "react-native-vector-icons": "^9.2.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jacobclyne/liquid-player.git"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jacobclyne/liquid-player/issues"
+  },
+  "homepage": "https://github.com/jacobclyne/liquid-player#readme",
+  "devDependencies": {}
+}
