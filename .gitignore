@@ -114,3 +114,5 @@ dist
 .yarn/build-state.yml
 .pnp.*
 .idea
+local.properties
+.gradle
