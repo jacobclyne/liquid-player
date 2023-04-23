@@ -29,6 +29,7 @@ export default class LiquidPlayer extends Component {
         type: '',
         mainVer: 0,
         patchVer: 0,
+        initType: 2,
         autoPlay: true,
         initOptions: [],
         progressUpdateInterval: 250,
