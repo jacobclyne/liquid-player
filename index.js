@@ -260,7 +260,7 @@ LiquidPlayer.propTypes = {
     rotation: PropTypes.number,
     style: PropTypes.object,
     progressUpdateInterval: PropTypes.number,
-    initType: PropTypes.arrayOf(PropTypes.string),
+    initType: PropTypes.number,
     mediaOptions: PropTypes.object,
     userAgent: PropTypes.string,
     hwDecoderEnabled: PropTypes.bool,
