@@ -121,11 +121,6 @@ public class ReactVlcPlayerViewManager extends SimpleViewManager<ReactVlcPlayerV
         //videoView.seekTo(seek);
     }
 
-    @ReactProp(name = PROP_AUTO_ASPECT_RATIO, defaultBoolean = false)
-    public void setAutoAspectRatio(final ReactVlcPlayerView videoView, final boolean autoPlay) {
-        videoView.setAutoAspectRatio(autoPlay);
-    }
-
     @ReactProp(name = PROP_SUBTITLE_TRACK)
     public void setSubtitleTrack(final ReactVlcPlayerView videoView, final int track) {
         videoView.setSubtitleTrack(track);
@@ -162,11 +157,6 @@ public class ReactVlcPlayerViewManager extends SimpleViewManager<ReactVlcPlayerV
     @ReactProp(name = PROP_AUDIO_TRACK)
     public void setAudioTrack(final ReactVlcPlayerView videoView, final int audioTrack) {
         videoView.setAudioTrack(audioTrack);
-    }
-
-    @ReactProp(name = PROP_TEXT_TRACK)
-    public void setTextTrack(final ReactVlcPlayerView videoView, final int textTrack) {
-        videoView.setTextTrack(textTrack);
     }
 
     private boolean startsWithValidScheme(String uriString) {

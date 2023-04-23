@@ -59,36 +59,21 @@ Reference: https://code.videolan.org/videolan/vlc-android/-/issues/2252
 ## Use
 
 ```
-import { VLCPlayer, VlCPlayerView } from 'liquid-player';
-import Orientation from 'liquid-player';
+import LiquidPlayer from 'liquid-player';
 
-    <VLCPlayer
-        style={[styles.video]}
-        videoAspectRatio="16:9"
-        source={{ uri: "https://www.radiantmediaplayer.com/media/big-buck-bunny-360p.mp4"}}
-    />
-
-or you can use
-
-    <VlCPlayerView
-          autoplay={false}
-          url="https://www.radiantmediaplayer.com/media/big-buck-bunny-360p.mp4"
-          Orientation={Orientation}
-          ggUrl=""
-          showGG={true}
-          showTitle={true}
-          title="Big Buck Bunny"
-          showBack={true}
-          onLeftPress={()=>{}}
-       />
+<LiquidPlayer
+    style={[styles.video]}
+    videoAspectRatio="16:9"
+    source={{ uri: "https://www.radiantmediaplayer.com/media/big-buck-bunny-360p.mp4"}}
+/>
 ```
 
 ### LiquidPlayer Props
 
 | Prop                | Description                                                                                                                                        | Default |
-| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+|---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|---------|
 | `source`            | Object that contains the uri of a video or song to play eg `{{ uri: "https://video.com/example.mkv" }}`                                            | `{}`    |
-| `subtitleUri`       | local subtitle file path，if you want to hide subtitle, you can set this to an empty subtitle file，current we don't support a `hide subtitle` prop.|         |
+| `subtitleUri`       | local subtitle file path，if you want to hide subtitle, you can set this to an empty subtitle file，current we don't support a `hide subtitle` prop. |         |
 | `paused`            | Set to `true` or `false` to pause or play the media                                                                                                | `false` |
 | `repeat`            | Set to `true` or `false` to loop the media                                                                                                         | `false` |
 | `rate`              | Set the playback rate of the player                                                                                                                | `1`     |
@@ -108,7 +93,7 @@ or you can use
 Callback props take a function that gets fired on various player events:
 
 | Prop           | Description                                                                                                                                                                                                          |
-| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|----------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `onPlaying`    | Called when media starts playing returns eg `{target: 9, duration: 99750, seekable: true}`                                                                                                                           |
 | `onProgress`   | Callback containing `position` as a fraction, and `duration`, `currentTime` and `remainingTime` in seconds <br />&nbsp; ◦ &nbsp;eg `{  duration: 99750, position: 0.30, currentTime: 30154, remainingTime: -69594 }` |
 | `onPaused`     | Called when media is paused                                                                                                                                                                                          |
@@ -116,9 +101,10 @@ Callback props take a function that gets fired on various player events:
 | `onBuffering ` | Called when media is buffering                                                                                                                                                                                       |
 | `onEnded`      | Called when media playing ends                                                                                                                                                                                       |
 | `onError`      | Called when an error occurs whilst attempting to play media                                                                                                                                                          |
-| `onLoad`       | Called when video info is loaded, Callback containing VideoInfo
+| `onLoad`       | Called when video info is loaded, Callback containing VideoInfo                                                                                                                                                      |
 
 VideoInfo example:
+
 ```
  {
     duration: 30906, 

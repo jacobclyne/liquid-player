@@ -1,4 +1,4 @@
-package com.yuanzhou.vlc.vlcplayer;
+package com.liquid.player.vlcplayer;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -21,7 +21,7 @@ import com.facebook.react.bridge.WritableArray;
 
 import com.facebook.react.uimanager.ThemedReactContext;
 
-import org.videolan.libvlc.interfaces.IVLCVout;
+import org.videolan.libvlc.IVLCVout;
 import org.videolan.libvlc.LibVLC;
 import org.videolan.libvlc.Media;
 import org.videolan.libvlc.MediaPlayer;
@@ -66,6 +66,7 @@ class ReactVlcPlayerView extends TextureView implements
     private boolean isHostPaused = false;
     private int preVolume = 200;
     private boolean autoAspectRatio = false;
+    private String aspectRatio = null;
 
     private float mProgressUpdateInterval = 250;
     private Handler mProgressUpdateHandler = new Handler();
@@ -100,7 +101,6 @@ class ReactVlcPlayerView extends TextureView implements
     @Override
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
-        //createPlayer();
     }
 
     @Override
@@ -138,7 +138,7 @@ class ReactVlcPlayerView extends TextureView implements
             map.putString("type", "Paused");
             eventEmitter.onVideoStateChange(map);
         }
-        Log.i("onHostPause", "---------onHostPause------------>");
+        // Log.i("onHostPause", "---------onHostPause------------>");
     }
 
 
@@ -196,9 +196,7 @@ class ReactVlcPlayerView extends TextureView implements
                 if (mMediaPlayer != null) {
                     IVLCVout vlcOut = mMediaPlayer.getVLCVout();
                     vlcOut.setWindowSize(mVideoWidth, mVideoHeight);
-                    if (autoAspectRatio) {
-                        mMediaPlayer.setAspectRatio(mVideoWidth + ":" + mVideoHeight);
-                    }
+                    applyAspectRatio();
                 }
             }
         }
@@ -213,6 +211,7 @@ class ReactVlcPlayerView extends TextureView implements
 
         @Override
         public void onEvent(MediaPlayer.Event event) {
+            // System.out.println("onEvent: " + event.type);
             boolean isPlaying = mMediaPlayer.isPlaying();
             currentTime = mMediaPlayer.getTime();
             float position = mMediaPlayer.getPosition();
@@ -234,18 +233,13 @@ class ReactVlcPlayerView extends TextureView implements
                     break;
                 case MediaPlayer.Event.Opening:
                     map.putString("type", "Opening");
-                    eventEmitter.sendEvent(map, VideoEventEmitter.EVENT_ON_OPEN);
+                    // eventEmitter.sendEvent(map, VideoEventEmitter.EVENT_ON_OPEN);
                     break;
                 case MediaPlayer.Event.Paused:
                     map.putString("type", "Paused");
                     eventEmitter.sendEvent(map, VideoEventEmitter.EVENT_ON_PAUSED);
                     break;
                 case MediaPlayer.Event.Buffering:
-                    if(mVideoInfo == null && mMediaPlayer.getAudioTracksCount() > 0) {
-                        mVideoInfo = getVideoInfo();
-                        eventEmitter.sendEvent(mVideoInfo, VideoEventEmitter.EVENT_ON_LOAD);
-                    }
-
                     map.putDouble("bufferRate", event.getBuffering());
                     map.putString("type", "Buffering");
                     eventEmitter.sendEvent(map, VideoEventEmitter.EVENT_ON_VIDEO_BUFFERING);
@@ -325,7 +319,7 @@ class ReactVlcPlayerView extends TextureView implements
         audioManager.abandonAudioFocus(this);
     }
 
-    private void createPlayer(boolean autoplayResume, boolean isResume) {
+    private void createPlayer(boolean autoPlayResume, boolean isResume) {
         releasePlayer();
         if (this.getSurfaceTexture() == null) {
             return;
@@ -335,12 +329,13 @@ class ReactVlcPlayerView extends TextureView implements
             String uriString = srcMap.hasKey("uri") ? srcMap.getString("uri") : null;
             //String extension = srcMap.hasKey("type") ? srcMap.getString("type") : null;
             boolean isNetwork = srcMap.hasKey("isNetwork") ? srcMap.getBoolean("isNetwork") : false;
-            boolean autoplay = srcMap.hasKey("autoplay") ? srcMap.getBoolean("autoplay") : true;
+            boolean autoPlay = srcMap.hasKey("autoPlay") ? srcMap.getBoolean("autoPlay") : true;
             int initType = srcMap.hasKey("initType") ? srcMap.getInt("initType") : 1;
             ReadableArray mediaOptions = srcMap.hasKey("mediaOptions") ? srcMap.getArray("mediaOptions") : null;
             ReadableArray initOptions = srcMap.hasKey("initOptions") ? srcMap.getArray("initOptions") : null;
-            Integer hwDecoderEnabled = srcMap.hasKey("hwDecoderEnabled") ? srcMap.getInt("hwDecoderEnabled") : null;
-            Integer hwDecoderForced = srcMap.hasKey("hwDecoderForced") ? srcMap.getInt("hwDecoderForced") : null;
+            String userAgent = srcMap.hasKey("userAgent") ? srcMap.getString("userAgent") : null;
+            boolean hwDecoderEnabled = srcMap.hasKey("hwDecoderEnabled") ? srcMap.getBoolean("hwDecoderEnabled") : false;
+            boolean hwDecoderForced = srcMap.hasKey("hwDecoderForced") ? srcMap.getBoolean("hwDecoderForced") : false;
 
             if (initOptions != null) {
                 ArrayList options = initOptions.toArrayList();
@@ -359,15 +354,18 @@ class ReactVlcPlayerView extends TextureView implements
             mMediaPlayer = new MediaPlayer(libvlc);
             setMutedModifier(mMuted);
             mMediaPlayer.setEventListener(mPlayerListener);
+
+            if (userAgent != null) {
+                libvlc.setUserAgent(userAgent, userAgent);
+            }
+
             //this.getHolder().setKeepScreenOn(true);
             IVLCVout vlcOut = mMediaPlayer.getVLCVout();
             if (mVideoWidth > 0 && mVideoHeight > 0) {
                 vlcOut.setWindowSize(mVideoWidth, mVideoHeight);
-                if (autoAspectRatio) {
-                    mMediaPlayer.setAspectRatio(mVideoWidth + ":" + mVideoHeight);
-                }
-                //mMediaPlayer.setAspectRatio(mVideoWidth+":"+mVideoHeight);
+                applyAspectRatio();
             }
+
             DisplayMetrics dm = getResources().getDisplayMetrics();
             Media m = null;
             if (isNetwork) {
@@ -377,17 +375,7 @@ class ReactVlcPlayerView extends TextureView implements
                 m = new Media(libvlc, uriString);
             }
             m.setEventListener(mMediaListener);
-            if (hwDecoderEnabled != null && hwDecoderForced != null) {
-                boolean hmEnabled = false;
-                boolean hmForced = false;
-                if (hwDecoderEnabled >= 1) {
-                    hmEnabled = true;
-                }
-                if (hwDecoderForced >= 1) {
-                    hmForced = true;
-                }
-                m.setHWDecoderEnabled(hmEnabled, hmForced);
-            }
+            m.setHWDecoderEnabled(hwDecoderEnabled, hwDecoderForced);
             //添加media  option
             if (mediaOptions != null) {
                 ArrayList options = mediaOptions.toArrayList();
@@ -415,11 +403,11 @@ class ReactVlcPlayerView extends TextureView implements
                 //vlcOut.attachViews(onNewVideoLayoutListener);
             }
             if (isResume) {
-                if (autoplayResume) {
+                if (autoPlayResume) {
                     mMediaPlayer.play();
                 }
             } else {
-                if (autoplay) {
+                if (autoPlay) {
                     isPaused = false;
                     mMediaPlayer.play();
                 }
@@ -459,6 +447,18 @@ class ReactVlcPlayerView extends TextureView implements
         }
     }
 
+    public void setSubtitleTrack(int trackIndex) {
+        if (mMediaPlayer != null) {
+            mMediaPlayer.setSpuTrack(trackIndex);
+        }
+    }
+
+    public void setAudioTrack(int trackIndex) {
+        if (mMediaPlayer != null) {
+            mMediaPlayer.setAudioTrack(trackIndex);
+        }
+    }
+
     public void setPosition(float position) {
         if (mMediaPlayer != null) {
             if (position >= 0 && position <= 1) {
@@ -480,10 +480,10 @@ class ReactVlcPlayerView extends TextureView implements
      * @param uri
      * @param isNetStr
      */
-    public void setSrc(String uri, boolean isNetStr, boolean autoplay) {
+    public void setSrc(String uri, boolean isNetStr, boolean autoPlay) {
         this.src = uri;
         this.netStrTag = isNetStr;
-        createPlayer(autoplay, false);
+        createPlayer(autoPlay, false);
     }
 
     public void setSrc(ReadableMap src) {
@@ -526,7 +526,6 @@ class ReactVlcPlayerView extends TextureView implements
      * @param muted
      */
     public void setMutedModifier(boolean muted) {
-        mMuted = muted;
         if (mMediaPlayer != null) {
             if (muted) {
                 this.preVolume = mMediaPlayer.getVolume();
@@ -543,7 +542,7 @@ class ReactVlcPlayerView extends TextureView implements
      * @param paused
      */
     public void setPausedModifier(boolean paused) {
-        Log.i("paused:", "" + paused + ":" + mMediaPlayer);
+        // Log.i("paused:", "" + paused + ":" + mMediaPlayer);
         if (mMediaPlayer != null) {
             if (paused) {
                 isPaused = true;
@@ -551,7 +550,7 @@ class ReactVlcPlayerView extends TextureView implements
             } else {
                 isPaused = false;
                 mMediaPlayer.play();
-                Log.i("do play:", true + "");
+                // Log.i("do play:", true + "");
             }
         } else {
             createPlayer(!paused, false);
@@ -572,10 +571,10 @@ class ReactVlcPlayerView extends TextureView implements
     /**
      * 重新加载视频
      *
-     * @param autoplay
+     * @param autoPlay
      */
-    public void doResume(boolean autoplay) {
-        createPlayer(autoplay, true);
+    public void doResume(boolean autoPlay) {
+        createPlayer(autoPlay, true);
     }
 
 
@@ -583,33 +582,25 @@ class ReactVlcPlayerView extends TextureView implements
     }
 
 
-    /**
-     * 改变宽高比
-     *
-     * @param aspectRatio
-     */
-    public void setAspectRatio(String aspectRatio) {
-        if (!autoAspectRatio && mMediaPlayer != null) {
+    public void applyAspectRatio() {
+        if (mMediaPlayer != null) {
+            if (aspectRatio == null || aspectRatio.equals("original")) {
+                aspectRatio = null;
+            } else if (aspectRatio.equals("fill")) {
+                if (mVideoWidth > 0 && mVideoHeight > 0) {
+                    // vlcOut.setWindowSize(mVideoWidth, mVideoHeight);
+                    mMediaPlayer.setAspectRatio(mVideoWidth + ":" + mVideoHeight);
+                }
+                return;
+            }
             mMediaPlayer.setAspectRatio(aspectRatio);
         }
     }
 
-    public void setAutoAspectRatio(boolean auto) {
-        autoAspectRatio = auto;
+    public void setAspectRatio(String aspect) {
+        aspectRatio = aspect;
+        applyAspectRatio();
     }
-
-    public void setAudioTrack(int track) {
-        if (mMediaPlayer != null) {
-            mMediaPlayer.setAudioTrack(track);
-        }
-    }
-
-    public void setTextTrack(int track) {
-        if (mMediaPlayer != null) {
-            mMediaPlayer.setSpuTrack(track);
-        }
-    }
-
 
     public void cleanUpResources() {
         if (surfaceView != null) {
@@ -644,64 +635,59 @@ class ReactVlcPlayerView extends TextureView implements
     private final Media.EventListener mMediaListener = new Media.EventListener() {
         @Override
         public void onEvent(Media.Event event) {
+            WritableMap map = Arguments.createMap();
             switch (event.type) {
                 case Media.Event.MetaChanged:
                     Log.i(tag, "Media.Event.MetaChanged:  =" + event.getMetaId());
                     break;
                 case Media.Event.ParsedChanged:
-                    Log.i(tag, "Media.Event.ParsedChanged  =" + event.getMetaId());
-                    
+                    try {
+                        MediaPlayer.TrackDescription[] titles = mMediaPlayer.getSpuTracks();
+                        WritableMap tracks = Arguments.createMap();
+                        for (int i = 0; i < titles.length; i++) {
+                            tracks.putString(titles[i].id + "", titles[i].name);
+                            System.out.println("subtitles: " + titles[i].id + " " + titles[i].name);
+                        }
+                        map.putMap("subtitles", tracks);
+                    } catch (Exception e) {
+                        WritableMap tracks = Arguments.createMap();
+                        map.putMap("subtitles", tracks);
+                        e.printStackTrace();
+                    }
+                    try {
+                        MediaPlayer.TrackDescription[] titles = mMediaPlayer.getAudioTracks();
+                        WritableMap tracks = Arguments.createMap();
+                        for (int i = 0; i < titles.length; i++) {
+                            tracks.putString(titles[i].id + "", titles[i].name);
+                            System.out.println("audio_tracks: " + titles[i].id + " " + titles[i].name);
+                        }
+                        map.putMap("audio_tracks", tracks);
+                    } catch (Exception e) {
+                        WritableMap tracks = Arguments.createMap();
+                        map.putMap("audio_tracks", tracks);
+                        e.printStackTrace();
+                    }
+
+                    try {
+                        long duration = mMediaPlayer.getLength();
+                        map.putDouble("duration", duration);
+                    } catch (Exception e) {
+                        map.putDouble("duration", -1);
+                    }
+                   
+                    Log.e(tag, "Media.Event.ParsedChanged  =" + event.getMetaId());
+                    eventEmitter.sendEvent(map, VideoEventEmitter.EVENT_ON_OPEN);
                     break;
                 case Media.Event.StateChanged:
-                    Log.i(tag, "StateChanged   =" + event.getMetaId());
+                    // Log.i(tag, "StateChanged   =" + event.getMetaId());
                     break;
                 default:
-                    Log.i(tag, "Media.Event.type=" + event.type + "   eventgetParsedStatus=" + event.getParsedStatus());
-                break;
+                    // Log.i(tag, "Media.Event.type=" + event.type + "   eventgetParsedStatus=" + event.getParsedStatus());
+                    break;
 
             }
         }
     };
-    
-    private WritableMap getVideoInfo() {
-
-        WritableMap map = Arguments.createMap();
-
-        map.putDouble("duration", mMediaPlayer.getLength());
-
-        if(mMediaPlayer.getAudioTracksCount() > 0) {
-            MediaPlayer.TrackDescription[] audioTracks = mMediaPlayer.getAudioTracks();
-            WritableArray tracks = new WritableNativeArray();
-            for (MediaPlayer.TrackDescription track : audioTracks) {
-                WritableMap trackMap = Arguments.createMap();
-                trackMap.putInt("id", track.id);
-                trackMap.putString("name", track.name);
-                tracks.pushMap(trackMap);
-            }
-            map.putArray("audioTracks", tracks);
-        }
-
-        if(mMediaPlayer.getSpuTracksCount() > 0) {
-            MediaPlayer.TrackDescription[] spuTracks = mMediaPlayer.getSpuTracks();
-            WritableArray tracks = new WritableNativeArray();
-            for (MediaPlayer.TrackDescription track : spuTracks) {
-                WritableMap trackMap = Arguments.createMap();
-                trackMap.putInt("id", track.id);
-                trackMap.putString("name", track.name);
-                tracks.pushMap(trackMap);
-            }
-            map.putArray("textTracks", tracks);
-        }
-
-        Media.VideoTrack video = mMediaPlayer.getCurrentVideoTrack();
-        if(video != null) {
-            WritableMap mapVideoSize = Arguments.createMap();
-            mapVideoSize.putInt("width", video.width);
-            mapVideoSize.putInt("height", video.height);
-            map.putMap("videoSize", mapVideoSize);
-        }
-        return map;
-    }
 
     /*private void changeSurfaceSize(boolean message) {
 

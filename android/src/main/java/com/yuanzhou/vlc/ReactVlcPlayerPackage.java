@@ -1,4 +1,4 @@
-package com.yuanzhou.vlc;
+package com.liquid.player;
 
 
 import com.facebook.react.ReactPackage;
@@ -10,10 +10,9 @@ import com.facebook.react.uimanager.ViewManager;
 import java.util.Collections;
 import java.util.List;
 
-import com.yuanzhou.vlc.vlcplayer.ReactVlcPlayerViewManager;
+import com.liquid.player.vlcplayer.ReactVlcPlayerViewManager;
 
 public class ReactVlcPlayerPackage implements ReactPackage {
-
     @Override
     public List<NativeModule> createNativeModules(ReactApplicationContext reactContext) {
         return Collections.emptyList();
