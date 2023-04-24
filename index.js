@@ -155,8 +155,8 @@ export default class LiquidPlayer extends Component {
                     hwDecoderEnabled: this.props.hwDecoderEnabled,
                     mainVer: source.mainVer || this.props.mainVer || 0,
                     patchVer: source.patchVer || this.props.patchVer || 0,
+                    initOptions: source.initOptions || this.props.initOptions || [],
                     isNetwork: !!(uri && uri.match(/^https?:/)) || isAsset || !(uri && uri.match(/^\//)),
-                    initOptions: ['--input-repeat=1000', ...(source.initOptions || this.props.initOptions || [])],
                 }}
                 ref={this._assignRoot}
                 style={[baseStyle, this.props.style]}
