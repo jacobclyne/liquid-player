@@ -443,6 +443,7 @@ class ReactVlcPlayerView extends TextureView implements
      */
     public void seekTo(long time) {
         if (mMediaPlayer != null) {
+            mMediaPlayer.pause();
             mMediaPlayer.setTime(time);
         }
     }
