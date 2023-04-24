@@ -10,6 +10,10 @@ export default class LiquidPlayer extends Component {
         this.seek = this.seek.bind(this);
         this.resume = this.resume.bind(this);
         this.snapshot = this.snapshot.bind(this);
+        this.changeVideoAspectRatio = this.changeVideoAspectRatio.bind(this);
+        this.subtitleTrack = this.subtitleTrack.bind(this);
+        this.audioTrack = this.audioTrack.bind(this);
+        this.play = this.play.bind(this);
         this._assignRoot = this._assignRoot.bind(this);
         this._onError = this._onError.bind(this);
         this._onProgress = this._onProgress.bind(this);
@@ -20,9 +24,6 @@ export default class LiquidPlayer extends Component {
         this._onBuffering = this._onBuffering.bind(this);
         this._onOpen = this._onOpen.bind(this);
         this._onLoadStart = this._onLoadStart.bind(this);
-        this.changeVideoAspectRatio = this.changeVideoAspectRatio.bind(this);
-        this.subtitleTrack = this.subtitleTrack.bind(this);
-        this.audioTrack = this.audioTrack.bind(this);
     }
 
     static defaultProps = {
@@ -57,6 +58,10 @@ export default class LiquidPlayer extends Component {
 
     snapshot(path) {
         this.setNativeProps({ snapshotPath: path });
+    }
+
+    play(paused) {
+        this.setNativeProps({ paused: paused });
     }
 
     autoAspectRatio(isAuto) {
