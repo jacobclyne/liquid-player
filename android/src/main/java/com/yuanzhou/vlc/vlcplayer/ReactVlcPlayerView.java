@@ -173,12 +173,12 @@ class ReactVlcPlayerView extends TextureView implements
                         map.putDouble("duration", totalLength);
                         eventEmitter.sendEvent(map, VideoEventEmitter.EVENT_PROGRESS);
                     }
-                    mProgressUpdateHandler.postDelayed(mProgressUpdateRunnable, Math.round(mProgressUpdateInterval));    
+                    mProgressUpdateHandler.postDelayed(mProgressUpdateRunnable, Math.round(mProgressUpdateInterval));
                 }
             };
             mProgressUpdateHandler.postDelayed(mProgressUpdateRunnable,0);
         }
-            
+
     }
 
 
@@ -376,6 +376,13 @@ class ReactVlcPlayerView extends TextureView implements
             }
             m.setEventListener(mMediaListener);
             m.setHWDecoderEnabled(hwDecoderEnabled, hwDecoderForced);
+            try {
+                m.setVideoScale(Media.ScaleType.SURFACE_BEST_FIT);
+            } catch (Exception e) {
+                e.printStackTrace();
+                Log.e(tag, "SURFACE_BEST_FIT_NOT_FOUND" + e.getLocalizedMessage());
+            }
+
             //添加media  option
             if (mediaOptions != null) {
                 ArrayList options = mediaOptions.toArrayList();
@@ -644,12 +651,14 @@ class ReactVlcPlayerView extends TextureView implements
                 case Media.Event.ParsedChanged:
                     try {
                         MediaPlayer.TrackDescription[] titles = mMediaPlayer.getSpuTracks();
-                        WritableMap tracks = Arguments.createMap();
-                        for (int i = 0; i < titles.length; i++) {
-                            tracks.putString(titles[i].id + "", titles[i].name);
-                            System.out.println("subtitles: " + titles[i].id + " " + titles[i].name);
+                        if (titles != null) {
+                            WritableMap tracks = Arguments.createMap();
+                            for (int i = 0; i < titles.length; i++) {
+                                tracks.putString(titles[i].id + "", titles[i].name);
+                                System.out.println("subtitles: " + titles[i].id + " " + titles[i].name);
+                            }
+                            map.putMap("subtitles", tracks);
                         }
-                        map.putMap("subtitles", tracks);
                     } catch (Exception e) {
                         WritableMap tracks = Arguments.createMap();
                         map.putMap("subtitles", tracks);
@@ -657,12 +666,13 @@ class ReactVlcPlayerView extends TextureView implements
                     }
                     try {
                         MediaPlayer.TrackDescription[] titles = mMediaPlayer.getAudioTracks();
-                        WritableMap tracks = Arguments.createMap();
-                        for (int i = 0; i < titles.length; i++) {
-                            tracks.putString(titles[i].id + "", titles[i].name);
-                            System.out.println("audio_tracks: " + titles[i].id + " " + titles[i].name);
+                        if (titles != null) {
+                            WritableMap tracks = Arguments.createMap();
+                            for (int i = 0; i < titles.length; i++) {
+                                tracks.putString(titles[i].id + "", titles[i].name);
+                                System.out.println("audio_tracks: " + titles[i].id + " " + titles[i].name);
+                            }
                         }
-                        map.putMap("audio_tracks", tracks);
                     } catch (Exception e) {
                         WritableMap tracks = Arguments.createMap();
                         map.putMap("audio_tracks", tracks);
@@ -675,7 +685,7 @@ class ReactVlcPlayerView extends TextureView implements
                     } catch (Exception e) {
                         map.putDouble("duration", -1);
                     }
-                   
+
                     Log.e(tag, "Media.Event.ParsedChanged  =" + event.getMetaId());
                     eventEmitter.sendEvent(map, VideoEventEmitter.EVENT_ON_OPEN);
                     break;
