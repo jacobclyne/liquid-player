@@ -376,13 +376,6 @@ class ReactVlcPlayerView extends TextureView implements
             }
             m.setEventListener(mMediaListener);
             m.setHWDecoderEnabled(hwDecoderEnabled, hwDecoderForced);
-            try {
-                m.setVideoScale(Media.ScaleType.SURFACE_BEST_FIT);
-            } catch (Exception e) {
-                e.printStackTrace();
-                Log.e(tag, "SURFACE_BEST_FIT_NOT_FOUND" + e.getLocalizedMessage());
-            }
-
             //添加media  option
             if (mediaOptions != null) {
                 ArrayList options = mediaOptions.toArrayList();
