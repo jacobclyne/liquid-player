@@ -31,9 +31,17 @@ export default class LiquidPlayer extends Component {
         mainVer: 0,
         patchVer: 0,
         initType: 2,
+        muted: true,
+        repeat: false,
         autoPlay: true,
         initOptions: [],
+        autoAspectRatio: true,
         progressUpdateInterval: 250,
+        style: {
+            width: '100%',
+            height: '100%',
+        },
+        resizeMode: 'cover',
     };
 
     setNativeProps(nativeProps) {
@@ -120,6 +128,7 @@ export default class LiquidPlayer extends Component {
     }
 
     _onPaused(event) {
+        this.seek(0);
         if (this.props.onPaused) {
             this.props.onPaused(event.nativeEvent);
         }
